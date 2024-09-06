@@ -42,7 +42,7 @@ Highcharts.chart('container2', {
     name: '預定進度',
     data: [0.1,3.60,12,17,22,30,31,45,50,50,61,70,79,83,93,100 
 ],
-	color: '#06A3DA'
+	color: '#1772E8'
   }, {
     name: '實際進度',
     data: [0.36,4.23

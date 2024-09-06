@@ -61,7 +61,7 @@ title: {
           radius: 98,
           innerRadius: 82,
           y: 5.44,
-          color:'#06A3DA'
+          color:'#1772E8'
       }, {
           name: '實際進度',
           radius: 78,
