@@ -355,8 +355,12 @@ iframe {
 }
 a p{color:white}
 .text-danger{color:#e53935}
-table{color: #344767 !important;;font-size:0.9rem}
-i::before{margin: 0 0.4em 0 0;}
+table{color: #344767 !important;
+      font-size:1rem;}
+table p {
+        color: #100f17 !important;
+    }
+/*i::before{margin: 0 0.4em 0 0;}*/
 .linkbnr{max-width:280px}
 .modal-dialog{max-width:fit-content}
 .edit td{min-width:80px}
@@ -368,3 +372,4 @@ i::before{margin: 0 0.4em 0 0;}
 }
 .text-white a{
 color:white;}
+

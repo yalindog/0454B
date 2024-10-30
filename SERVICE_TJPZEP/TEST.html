@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <meta charset="utf-8" />
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.js"></script>
+
+    <script>
+        var TOKEN = '';
+        var U_Permit = '';
+
+        $(document).ready(function () {
+            initControll();
+        })
+
+        function LOGIN() {
+            initControll();
+
+            var ID = $('#id').val();//"kai";
+            var Password = $('#pwd').val(); //"123";
+            var FUN_NAME = "USER_LOGIN";//必要參數 預存程序名稱
+            var TYPE = "L";//必要參數 類型 Q:查詢 I:新增  U:更新  L:登入取授權
+
+            //var PA = '{"ID": "' + ID + '", "PWD": "' + Password + '",' +
+            //          '"FUNCTION_NAME":"' + FUN_NAME + '","TYPE":"' + TYPE + '","TOKEN":"' + TOKEN + '"}';
+            var PA = '{"ID": "' + ID + '", "PWD": "' + Password + '",' +
+                      '"FUNCTION_NAME":"' + FUN_NAME + '","TYPE":"' + TYPE + '"}';
+            if (ID == '' || Password == '') {
+                $('#txtLogin').html("帳/密 未輸入");
+                return;
+            }
+
+            $.ajax({
+                url: './service.ashx',
+                //url: 'https://tjpzep.sinotech.com.tw/SERVICE_TJPZEP/service.ashx',
+                type: 'POST',
+                data: PA,
+                dataType: "json",
+                success: function (dataJS) {
+                    console.log(dataJS);
+                    var dataArray = dataJS;
+
+                    var Message_Code = dataArray.Message[0].Message_Code;
+                    var Message_Content = dataArray.Message[0].Message_Content;
+                    if (Message_Code == '1') {
+                        $('#txtLogin').html("登入失敗");
+
+                        $.each(dataArray.Data, function (idx, obj) {
+
+                            var U_Name = obj.U_Name
+                            TOKEN = obj.Token
+                            U_Permit = obj.U_Permit
+                            var Delay = obj.Delay
+
+                            sessionStorage.setItem('token', TOKEN);
+                            sessionStorage.setItem('u_permit', U_Permit);
+
+                            $('#txtLogin').html(U_Name + "，您好<br/>TOKEN值：【" + TOKEN + "】<br/>時效：【" + Delay + "】");
+
+                            setVisible();
+
+                        });
+                    }
+                    else {
+                        alert(Message_Content);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Status: " + textStatus); alert("Error: " + errorThrown);
+                }
+
+
+            })
+        }
+
+        function LOGOUT() {
+            if (sessionStorage.getItem('token') == null) {
+                $('#txtLogin').html('尚未登入');
+                return;
+            }
+
+            sessionStorage.clear();
+            $('#txtLogin').html('已登出');
+            initControll();
+        }
+
+        function QUERY_USER() {
+
+            if (sessionStorage.getItem('token') == null) {
+                $('#txtUsers').html('權限不足或尚未登入');
+            }
+            else {
+                var FUN_NAME = "USER_QUERY";//必要參數 預存程序名稱
+                var TYPE = "Q";//必要參數 類型 Q:查詢 I:新增  U:更新  L:登入取授權
+
+                TOKEN = sessionStorage.getItem('token');//必要參數 驗證用
+                U_Permit = sessionStorage.getItem('u_permit');
+
+
+                var PA = '{' +
+                         '"FUNCTION_NAME":"' + FUN_NAME + '","TYPE":"' + TYPE + '","TOKEN":"' + TOKEN + '"}';
+
+                var Info = ''
+                $.ajax({
+                    url: './service.ashx',
+                    //url: 'https://tjpzep.sinotech.com.tw/SERVICE_TJPZEP/service.ashx',
+                    type: 'POST',
+                    data: PA,
+                    dataType: "json",
+                    success: function (dataJS) {
+                        console.log(dataJS);
+                        var dataArray = dataJS;
+
+                        var Message_Code = dataArray.Message[0].Message_Code;
+                        var Message_Content = dataArray.Message[0].Message_Content;
+                        if (Message_Code == '1') {
+                            $('#txtUsers').html("查無資料");
+                            $.each(dataArray.Data, function (idx, obj) {
+                                var IDX = obj.IDX;
+                                var U_Name = obj.U_Name;
+                                var Org = obj.Org;
+                                var U_Tel = obj.U_Tel;
+                                var U_Email = obj.U_Email;
+                                var add_OperateBtn = '';
+
+                                if (U_Permit == '1') {
+                                    add_OperateBtn = "<input type='button' value='修改' onclick='MODIFY_USER(\"" + IDX + "\")' />"
+                                    Info += "【" + U_Name + "】【" + Org + "】【" + U_Tel + "】【" + U_Email + "】" + add_OperateBtn + "<br/>";
+                                }
+                                else {
+                                    Info += "【" + U_Name + "】【" + Org + "】【" + U_Tel + "】【" + U_Email + "】" + add_OperateBtn + "<br/>";
+                                }
+                            });
+
+                            $('#txtUsers').html(Info);
+                        }
+                        else {
+                            alert(Message_Content);
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        alert("Status: " + textStatus); alert("Error: " + errorThrown);
+                    }
+
+
+                })
+
+            }
+        }
+
+        function MODIFY_USER(IDX) {
+            if (sessionStorage.getItem('token') == null || U_Permit != '1') {
+                alert('權限不足或尚未登入');
+                return;
+            }
+            alert(IDX);
+        }
+
+        function SURE_MODIFY_USER() {
+            if (sessionStorage.getItem('token') == null || U_Permit != '1') {
+                alert('權限不足或尚未登入');
+            }
+        }
+
+        function INSERT_USER() {
+            if (sessionStorage.getItem('token') == null || U_Permit != '1') {
+                alert('權限不足或尚未登入');
+            }
+        }
+
+        function initControll()
+        {
+            $('#btn_query_user').hide();
+            $('#btn_update_user').hide();
+            $('#btn_insert_user').hide();
+
+            //$('#txtLogin').html('');
+            $('#txtUsers').html('');
+            $('#txtUpdateUsers').html('');
+            $('#txtInsertUsers').html('');
+        }
+
+        function setVisible() {
+            if (sessionStorage.getItem('token') == null || sessionStorage.getItem('u_permit') == null) {
+                $('#btn_query_user').hide();
+                $('#btn_update_user').hide();
+                $('#btn_insert_user').hide(); 
+
+                //$('#txtLogin').html('');
+                $('#txtUsers').html('');
+                $('#txtUpdateUsers').html('');
+                $('#txtInsertUsers').html(''); 
+            }
+
+            switch (sessionStorage.getItem('u_permit')) {
+                case "0":
+                    $('#btn_query_user').show();
+                    break;
+                case "1":
+                    $('#btn_query_user').show();
+                    $('#btn_update_user').show();
+                    $('#btn_insert_user').show();
+                    break;
+                case "2":
+                    $('#btn_query_user').show();
+                    break;
+            }
+
+        }
+    </script>
+</head>
+<body>
+    帳號：<input id="id" type="text"><br />
+    密碼：<input id="pwd" type="password"><br />
+    <input id="btn_login" type="button" value="登入" onclick="LOGIN()"><input id="btn_logout" type="button" value="登出" onclick="LOGOUT()">
+    <p id="txtLogin"></p>
+
+    <br />===================================================================================<br />
+    <input id="btn_query_user" type="button" value="查詢帳號清單" onclick="QUERY_USER()"><br />
+    <p id="txtUsers"></p>
+
+    <br />===================================================================================<br />
+    <input id="btn_update_user" type="button" value="確認修改帳號" onclick="SURE_MODIFY_USER()"><br />
+    <p id="txtUpdateUsers"></p>
+
+    <br />===================================================================================<br />
+    <input id="btn_insert_user" type="button" value="新增帳號" onclick="INSERT_USER()"><br />
+    <p id="txtInsertUsers"></p>
+
+</body>
+</html>
